@@ -1,199 +1,280 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Textile Calculator</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Textile Calculator — Fixed Selvage</title>
 <style>
-  body {
-    font-family: "Poppins", sans-serif;
-    background: #f0f4ff;
-    padding: 20px;
-    text-align: center;
+  :root{
+    --bg:#eef6ff; --card:#fff; --accent:#0b63c6; --muted:#334155;
+    --blue:#0a66ff;
   }
-
-  h1 {
-    color: #0055cc;
-    font-size: 28px;
-    margin-bottom: 10px;
-  }
-
-  .tab-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-
-  .tab {
-    background: #dbe3ff;
-    border: none;
-    padding: 10px 25px;
-    margin: 0 5px;
-    font-size: 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
-  }
-
-  .tab.active {
-    background: #0055cc;
-    color: #fff;
-  }
-
-  .content {
-    display: none;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    text-align: left;
-    max-width: 400px;
-    margin: auto;
-  }
-
-  .content.active {
-    display: block;
-  }
-
-  input, select, button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-  }
-
-  button {
-    background: #0055cc;
-    color: #fff;
-    border: none;
-    margin-top: 15px;
-    font-weight: bold;
-    transition: 0.3s;
-  }
-
-  button:hover {
-    background: #003d99;
-  }
-
-  .result {
-    background: #eef3ff;
-    padding: 10px;
-    border-radius: 6px;
-    margin-top: 15px;
-    white-space: pre-line;
-    font-family: monospace;
-  }
-
-  .highlight {
-    color: blue;
-    font-weight: bold;
-  }
+  body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--muted)}
+  .wrap{max-width:760px;margin:28px auto;padding:18px}
+  .card{max-width:520px;margin:0 auto;background:var(--card);border-radius:14px;box-shadow:0 10px 30px rgba(16,24,40,0.08);padding:20px}
+  h1{text-align:center;color:var(--accent);margin:0 0 14px;font-size:20px}
+  .tabs{display:flex;gap:10px;margin-bottom:16px}
+  .tab{flex:1;padding:10px;border-radius:10px;text-align:center;cursor:pointer;background:linear-gradient(180deg,#bfe0ff,#90caf9);color:#fff;font-weight:700}
+  .tab.inactive{background:transparent;color:var(--accent);border:1px solid #cfe8ff}
+  .section{display:none}
+  .section.active{display:block}
+  label{display:block;margin-top:10px;font-size:14px;color:#344054}
+  input, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8;margin-top:6px;background:#fbfdff;font-size:15px}
+  .row{display:flex;gap:10px}
+  .half{flex:1}
+  .btn{margin-top:14px;padding:12px;border-radius:10px;border:none;background:var(--accent);color:white;font-weight:700;cursor:pointer}
+  .result{margin-top:12px;padding:14px;border-radius:10px;background:#f8fbff;border:1px solid #e6f0ff;font-family:monospace;white-space:pre-line;color:#05203f}
+  .muted-small{font-size:13px;color:#64748b;margin-top:6px}
+  .blue-bold{color:var(--blue);font-weight:800}
+  @media(max-width:520px){.wrap{padding:12px}}
 </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🧵 Textile Calculator — Warping & Colour</h1>
 
-<h1>🧵 Textile Calculator</h1>
+      <div class="tabs">
+        <div id="tabWarp" class="tab" onclick="activateTab('warp')">Warping</div>
+        <div id="tabColor" class="tab inactive" onclick="activateTab('color')">Colour</div>
+      </div>
 
-<div class="tab-container">
-  <button class="tab active" onclick="openTab('warping')">Warping</button>
-  <button class="tab" onclick="openTab('colour')">Colour</button>
-</div>
+      <!-- WARPING -->
+      <div id="warp" class="section active">
+        <label>Yarn Type</label>
+        <select id="yarnWarp">
+          <option value="coarse">Coarse</option>
+          <option value="fine">Fine</option>
+        </select>
 
-<!-- Warping Section -->
-<div id="warping" class="content active">
-  <label>Yarn Type:</label>
-  <select id="yarnType">
-    <option value="coarse">Coarse</option>
-    <option value="fine">Fine</option>
-  </select>
+        <label>Reed (format: 72/2)</label>
+        <input id="reedWarp" placeholder="e.g. 72/2" />
 
-  <label>Reed (e.g. 72/2, 108/3):</label>
-  <input id="reed" type="text" placeholder="e.g. 72/2">
+        <div class="row">
+          <div class="half">
+            <label>Width (in inches)</label>
+            <input id="widthWarp" type="number" placeholder="e.g. 18" />
+          </div>
+          <div class="half">
+            <label>No. of Matches</label>
+            <select id="matchesWarp">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </div>
+        </div>
 
-  <label>Width (in inches):</label>
-  <input id="width" type="number" placeholder="e.g. 18">
+        <button class="btn" onclick="computeWarp()">Get Warping Construction</button>
 
-  <label>No. of Matchings:</label>
-  <select id="matchings">
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-  </select>
+        <div id="warpOutput" class="result" aria-live="polite">No result yet.</div>
+      </div>
 
-  <button onclick="calculateWarping()">Get Warping Construction</button>
-  <div id="warpingResult" class="result"></div>
-</div>
+      <!-- COLOUR -->
+      <div id="color" class="section">
+        <label>Yarn Type</label>
+        <select id="yarnColor">
+          <option value="coarse">Coarse</option>
+          <option value="fine">Fine</option>
+        </select>
 
-<!-- Colour Section -->
-<div id="colour" class="content">
-  <label>Body Ends:</label>
-  <input id="bodyEnds" type="number" placeholder="Enter body ends">
+        <label>Reed (format: 72/2)</label>
+        <input id="reedColor" placeholder="e.g. 72/2" />
 
-  <label>One Repeat (ends):</label>
-  <input id="repeatEnds" type="number" placeholder="Enter repeat ends">
+        <div class="row">
+          <div class="half">
+            <label>Width (in inches)</label>
+            <input id="widthColor" type="number" placeholder="e.g. 18" />
+          </div>
+          <div class="half">
+            <label>No. of Matches</label>
+            <select id="matchesColor">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </div>
+        </div>
 
-  <label>Multiply Value (colour section):</label>
-  <input id="multiplyVal" type="number" placeholder="Enter multiply number" oninput="calculateColour()">
+        <label>Repeat Ends (one repeat)</label>
+        <input id="repeatEnds" type="number" placeholder="e.g. 24" />
 
-  <div id="colourResult" class="result"></div>
-</div>
+        <label>Multiplier (live auto)</label>
+        <input id="multiplier" type="number" placeholder="e.g. 5" />
+
+        <div id="colorOutput" class="result" aria-live="polite">No result yet.</div>
+      </div>
+    </div>
+  </div>
 
 <script>
-function openTab(tabName) {
-  document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
-  document.querySelectorAll(".content").forEach(content => content.classList.remove("active"));
-  document.getElementById(tabName).classList.add("active");
-  event.target.classList.add("active");
+// Tab handling
+function activateTab(name){
+  document.getElementById('warp').classList.remove('active');
+  document.getElementById('color').classList.remove('active');
+  document.getElementById('tabWarp').classList.remove('inactive');
+  document.getElementById('tabColor').classList.remove('inactive');
+
+  if(name==='warp'){
+    document.getElementById('warp').classList.add('active');
+    document.getElementById('tabWarp').classList.remove('inactive');
+    document.getElementById('tabColor').classList.add('inactive');
+  } else {
+    document.getElementById('color').classList.add('active');
+    document.getElementById('tabColor').classList.remove('inactive');
+    document.getElementById('tabWarp').classList.add('inactive');
+  }
 }
 
-function calculateWarping() {
-  const yarnType = document.getElementById("yarnType").value;
-  const reedInput = document.getElementById("reed").value;
-  const width = parseFloat(document.getElementById("width").value);
-  const matchings = parseInt(document.getElementById("matchings").value);
+// parse reed "72/2"
+function parseReedField(v){
+  if(!v) return null;
+  const parts = v.replace(/\s+/g,'').split('/');
+  const reedNum = parseFloat(parts[0]);
+  const div = parts.length>1 ? parseFloat(parts[1]) : NaN;
+  if(isNaN(reedNum)) return null;
+  return {reedNum, div: isNaN(div) ? null : div};
+}
 
-  if (!reedInput.includes("/")) return alert("Please enter reed like 72/2 or 108/3");
+// compute warp (corrected: use each-side selvage)
+function computeWarp(){
+  const yarn = document.getElementById('yarnWarp').value;
+  const reedField = document.getElementById('reedWarp').value;
+  const parsed = parseReedField(reedField);
+  const width = parseFloat(document.getElementById('widthWarp').value);
+  const matches = parseInt(document.getElementById('matchesWarp').value,10);
+  const out = document.getElementById('warpOutput');
 
-  const [epiStr, endsStr] = reedInput.split("/");
-  const epi = parseFloat(epiStr);
-  const ends = parseFloat(endsStr);
-  const totalEnds = epi * width;
-  let selvage = yarnType === "coarse" ? 200 : 300;
-  let bodyEnds = totalEnds - (selvage * (matchings + 1));
-
-  if (matchings === 2) bodyEnds = bodyEnds / 2;
-  if (matchings === 3) bodyEnds = bodyEnds / 3;
-
-  let result = "";
-
-  if (matchings === 1) {
-    result = `1–${selvage} selvage\n${selvage+1}–${Math.round(totalEnds-selvage)} body\n${Math.round(totalEnds-selvage+1)}–${Math.round(totalEnds)} selvage`;
-  } else if (matchings === 2) {
-    const half = Math.round(bodyEnds);
-    result = `1–${selvage} selvage\n${selvage+1}–${selvage+half} body1\n${selvage+half+1}–${selvage*2+half} selvage\n${selvage*2+half+1}–${selvage*2+half*2} body2\n${selvage*2+half*2+1}–${Math.round(totalEnds)} selvage`;
-  } else if (matchings === 3) {
-    const part = Math.round(bodyEnds);
-    result = `1–${selvage} selvage\n${selvage+1}–${selvage+part} body1\n${selvage+part+1}–${selvage+part+20} selvage\n${selvage+part+21}–${selvage+part*2+20} body2\n${selvage+part*2+21}–${selvage+part*2+40} selvage\n${selvage+part*2+41}–${selvage+part*3+40} body3\n${selvage+part*3+41}–${Math.round(totalEnds)} selvage`;
+  if(!parsed || !parsed.reedNum || !parsed.div || isNaN(width) || width<=0){
+    out.innerText = "⚠️ Enter valid Reed (e.g. 72/2) and Width.";
+    return;
   }
 
-  document.getElementById("warpingResult").innerText = result;
+  const reedNum = parsed.reedNum;
+  const div = parsed.div;
+  const dentsPerInch = reedNum / 2;
+  const epi = dentsPerInch * div;
+  const totalEnds = Math.round(epi * width);
+
+  // totalSelvage is the total subtracted (300 or 200)
+  const totalSelvage = yarn === 'fine' ? 300 : 200;
+  // IMPORTANT: each side is half of totalSelvage
+  const eachSelvage = Math.round(totalSelvage / 2);
+
+  if(totalEnds <= totalSelvage){
+    out.innerText = `⚠️ Total ends (${totalEnds}) ≤ total selvage (${totalSelvage}). Choose larger width or different reed.`;
+    return;
+  }
+
+  const midGap = yarn === 'fine' ? 30 : 20;
+  const midGapsTotal = (matches - 1) * midGap;
+  const bodyTotal = totalEnds - totalSelvage;
+
+  if(bodyTotal <= midGapsTotal){
+    out.innerText = `⚠️ Body space (${bodyTotal}) too small to place ${matches} matches with mid gaps (${midGapsTotal}).`;
+    return;
+  }
+
+  const distributable = bodyTotal - midGapsTotal;
+  const base = Math.floor(distributable / matches);
+  let rem = distributable - base * matches;
+  const parts = [];
+  for(let i=0;i<matches;i++){
+    parts.push(base + (rem>0?1:0));
+    if(rem>0) rem--;
+  }
+
+  // Build ranges
+  let cursor = 1;
+  const ranges = [];
+
+  // left selvage (each side)
+  ranges.push({label:'Left Selvage', start:cursor, end:cursor + eachSelvage - 1});
+  cursor = ranges[ranges.length-1].end + 1;
+
+  // body parts with mid gaps
+  for(let i=0;i<parts.length;i++){
+    ranges.push({label:`Body ${i+1}`, start:cursor, end:cursor + parts[i] - 1});
+    cursor = ranges[ranges.length-1].end + 1;
+    if(i < parts.length - 1){
+      ranges.push({label:'Mid Selvage', start:cursor, end:cursor + midGap - 1});
+      cursor = ranges[ranges.length-1].end + 1;
+    }
+  }
+
+  // right selvage should fill to totalEnds
+  ranges.push({label:'Right Selvage', start:cursor, end:totalEnds});
+  // final validation
+  const sum = ranges.reduce((s,r)=> s + (r.end - r.start + 1), 0);
+  if(sum !== totalEnds){
+    out.innerText = '⚠️ Calculation mismatch — please check inputs.';
+    return;
+  }
+
+  // output
+  let text = `EPI: ${Number(epi.toFixed(2))}\nTotal Ends: ${totalEnds}\nTotal Selvage (both sides): ${totalSelvage}  (each side: ${eachSelvage})\nBody Total (all matches): ${bodyTotal}\n\nWarping Construction (vertical):\n`;
+  for(const r of ranges){
+    text += `${r.start}–${r.end}  ${r.label}\n`;
+  }
+  out.innerText = text;
 }
 
-function calculateColour() {
-  const bodyEnds = parseFloat(document.getElementById("bodyEnds").value);
-  const repeatEnds = parseFloat(document.getElementById("repeatEnds").value);
-  const multiplyVal = parseFloat(document.getElementById("multiplyVal").value);
+// colour live
+function computeColorLive(){
+  const yarn = document.getElementById('yarnColor').value;
+  const reedField = document.getElementById('reedColor').value;
+  const parsed = parseReedField(reedField);
+  const width = parseFloat(document.getElementById('widthColor').value);
+  const matches = parseInt(document.getElementById('matchesColor').value,10);
+  const repeatEnds = parseFloat(document.getElementById('repeatEnds').value);
+  const multiplier = parseFloat(document.getElementById('multiplier').value);
+  const out = document.getElementById('colorOutput');
 
-  if (!bodyEnds || !repeatEnds) return;
+  if(!parsed || !parsed.reedNum || !parsed.div || isNaN(width) || width<=0){
+    out.innerText = "⚠️ Enter valid Reed (e.g. 72/2) and Width.";
+    return;
+  }
 
-  const division = bodyEnds / repeatEnds;
-  const finalValue = division * (multiplyVal || 0);
+  const epi = (parsed.reedNum / 2) * parsed.div;
+  const totalEnds = Math.round(epi * width);
+  const totalSelvage = yarn === 'fine' ? 300 : 200;
+  const bodyTotal = totalEnds - totalSelvage;
+  if(bodyTotal < 0){ out.innerText = '⚠️ Total ends too small.'; return; }
 
-  document.getElementById("colourResult").innerHTML =
-    `Body Ends ÷ Repeat Ends = ${division.toFixed(2)}\nResult = <span class="highlight">${finalValue.toFixed(2)}</span>`;
+  const midGap = yarn === 'fine' ? 30 : 20;
+  const midGapsTotal = (matches -1) * midGap;
+  const distributable = bodyTotal - midGapsTotal;
+  if(distributable <= 0){ out.innerText = '⚠️ Not enough body space.'; return; }
+  const base = Math.floor(distributable / matches);
+  // body per match (approx)
+  const bodyPerMatch = base;
+
+  let divisionNumber = null;
+  let divisionText = '—';
+  if(repeatEnds && repeatEnds>0){
+    divisionNumber = bodyPerMatch / repeatEnds;
+    divisionText = Number(divisionNumber.toFixed(6));
+  }
+
+  let finalText = '—';
+  if(divisionNumber !== null && !isNaN(multiplier)){
+    const val = divisionNumber * multiplier;
+    finalText = Number(val.toFixed(6));
+  }
+
+  // show final in bold blue when available
+  let displayFinal = finalText === '—' ? '—' : `<span class="blue-bold">${finalText}</span>`;
+
+  let outText = `Body Total (all matches): ${bodyTotal}\nBody per Match (approx): ${bodyPerMatch}\n\nRepeat Ends (input): ${repeatEnds || '—'}\nDivision = BodyPerMatch ÷ RepeatEnds: ${divisionText}\nMultiplier (input): ${isNaN(multiplier)? '—' : multiplier}\n\nFinal (Division × Multiplier): ${displayFinal}\n\n(Values update live as you type)`;
+  out.innerHTML = outText;
 }
+
+// live listeners
+['yarnColor','reedColor','widthColor','matchesColor','repeatEnds','multiplier'].forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', computeColorLive);
+  el.addEventListener('change', computeColorLive);
+});
 </script>
 </body>
 </html>
