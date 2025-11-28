@@ -1,225 +1,339 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Textile Calculator — Final Version</title>
-<style>
-  :root {
-    --bg:#eef6ff; --card:#fff; --accent:#0b63c6; --muted:#334155; --blue:#0a66ff;
-  }
-  body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--muted)}
-  .wrap{max-width:760px;margin:28px auto;padding:18px}
-  .card{max-width:540px;margin:0 auto;background:var(--card);border-radius:14px;box-shadow:0 10px 30px rgba(16,24,40,0.08);padding:20px}
-  h1{text-align:center;color:var(--accent);margin:0 0 14px;font-size:20px}
-  .tabs{display:flex;gap:10px;margin-bottom:16px}
-  .tab{flex:1;padding:10px;border-radius:10px;text-align:center;cursor:pointer;background:linear-gradient(180deg,#bfe0ff,#90caf9);color:#fff;font-weight:700}
-  .tab.inactive{background:transparent;color:var(--accent);border:1px solid #cfe8ff}
-  .section{display:none}
-  .section.active{display:block}
-  label{display:block;margin-top:10px;font-size:14px;color:#344054}
-  input, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8;margin-top:6px;background:#fbfdff;font-size:15px}
-  .row{display:flex;gap:10px}
-  .half{flex:1}
-  .btn{margin-top:14px;padding:12px;border-radius:10px;border:none;background:var(--accent);color:white;font-weight:700;cursor:pointer}
-  .result{margin-top:12px;padding:14px;border-radius:10px;background:#f8fbff;border:1px solid #e6f0ff;font-family:monospace;white-space:pre-line;overflow-x:auto}
-  .control-row{display:flex;align-items:center;gap:10px;margin-top:8px}
-  .control-row input[type=color]{width:40px;height:30px;border:none;background:none;cursor:pointer}
-  .control-row input[type=range]{flex:1}
-  .blue-bold{color:var(--blue);font-weight:800}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Image Drop & Share</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>🧵 Textile Calculator — Warping & Colour</h1>
 
-    <div class="tabs">
-      <div id="tabWarp" class="tab" onclick="activateTab('warp')">Warping</div>
-      <div id="tabColor" class="tab inactive" onclick="activateTab('color')">Colour</div>
+<div id="app" class="min-h-screen p-4 sm:p-8">
+    
+    <!-- Header and User Info -->
+    <header class="mb-8 p-4 bg-white shadow-lg rounded-xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Image Share Drop</h1>
+        <p class="text-sm text-gray-600 mb-4">Upload images and let others download them instantly.</p>
+
+        <div id="auth-status" class="text-xs text-gray-500 bg-gray-100 p-2 rounded-lg break-all">
+            Loading user...
+        </div>
+    </header>
+
+    <!-- Upload Section -->
+    <section class="mb-10 p-6 bg-white shadow-lg rounded-xl border border-blue-200">
+        <h2 class="text-xl font-semibold text-blue-700 mb-4">Upload New Image</h2>
+        <div class="flex flex-col sm:flex-row gap-4 items-end">
+            <div class="flex-grow w-full">
+                <label for="file-upload" class="block text-sm font-medium text-gray-700 mb-2">Select Image (Max 500 KB)</label>
+                <input type="file" id="file-upload" accept="image/*" class="w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100
+                    cursor-pointer"
+                />
+            </div>
+            <button id="upload-btn" onclick="handleUpload()" class="w-full sm:w-auto px-6 py-2 text-white bg-blue-600 rounded-full font-semibold shadow-md hover:bg-blue-700 transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                Upload
+            </button>
+        </div>
+        <p id="upload-message" class="mt-3 text-sm font-medium"></p>
+        <p class="mt-4 text-xs text-red-500 bg-red-50 p-2 rounded-lg border border-red-200">
+            WARNING: We are storing the image data directly in the database. Please keep files small (under 500 KB) to prevent errors due to database size limits.
+        </p>
+    </section>
+
+    <!-- Images List Section -->
+    <section class="p-6 bg-white shadow-lg rounded-xl">
+        <h2 class="text-xl font-semibold text-gray-800 mb-6">Shared Images</h2>
+        <div id="images-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <p id="loading-indicator" class="col-span-full text-center text-gray-500">Loading images...</p>
+        </div>
+        <p id="empty-state" class="hidden col-span-full text-center text-gray-500 mt-4">No images uploaded yet. Be the first!</p>
+    </section>
+
+    <!-- Custom Modals/Messages -->
+    <div id="modal-container" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center p-4 z-50">
+        <div id="modal-content" class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full">
+            <!-- Modal content will be inserted here -->
+        </div>
     </div>
-
-    <!-- WARPING -->
-    <div id="warp" class="section active">
-      <label>Yarn Type</label>
-      <select id="yarnWarp" onchange="syncInputs()">
-        <option value="coarse">Coarse</option>
-        <option value="fine">Fine</option>
-      </select>
-
-      <label>Reed (format: 72/2)</label>
-      <input id="reedWarp" placeholder="e.g. 72/2" oninput="syncInputs()" />
-
-      <div class="row">
-        <div class="half">
-          <label>Width (in inches)</label>
-          <input id="widthWarp" type="number" placeholder="e.g. 18" oninput="syncInputs()" />
-        </div>
-        <div class="half">
-          <label>No. of Matches</label>
-          <select id="matchesWarp" onchange="syncInputs()">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-          </select>
-        </div>
-      </div>
-
-      <button class="btn" onclick="computeWarp()">Get Warping Construction</button>
-      <div id="warpOutput" class="result" style="font-size:16px;color:#05203f;">No result yet.</div>
-
-      <div class="control-row">
-        <label>Font Size:</label><input id="warpFontSize" type="range" min="12" max="28" value="16" />
-        <label>Color:</label><input id="warpFontColor" type="color" value="#05203f" />
-      </div>
-    </div>
-
-    <!-- COLOUR -->
-    <div id="color" class="section">
-      <label>Yarn Type</label>
-      <select id="yarnColor" onchange="syncInputs()">
-        <option value="coarse">Coarse</option>
-        <option value="fine">Fine</option>
-      </select>
-
-      <label>Reed (format: 72/2)</label>
-      <input id="reedColor" placeholder="e.g. 72/2" oninput="syncInputs()" />
-
-      <div class="row">
-        <div class="half">
-          <label>Width (in inches)</label>
-          <input id="widthColor" type="number" placeholder="e.g. 18" oninput="syncInputs()" />
-        </div>
-        <div class="half">
-          <label>No. of Matches</label>
-          <select id="matchesColor" onchange="syncInputs()">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-          </select>
-        </div>
-      </div>
-
-      <label>Repeat Ends (one repeat)</label>
-      <input id="repeatEnds" type="number" placeholder="e.g. 24" oninput="computeColorLive()" />
-
-      <label>Multiplier (live auto)</label>
-      <input id="multiplier" type="number" placeholder="e.g. 5" oninput="computeColorLive()" />
-
-      <div id="colorOutput" class="result" style="font-size:16px;color:#05203f;">No result yet.</div>
-
-      <div class="control-row">
-        <label>Font Size:</label><input id="colorFontSize" type="range" min="12" max="28" value="16" />
-        <label>Color:</label><input id="colorFontColor" type="color" value="#05203f" />
-      </div>
-    </div>
-  </div>
 </div>
 
-<script>
-function activateTab(name){
-  document.getElementById('warp').classList.remove('active');
-  document.getElementById('color').classList.remove('active');
-  document.getElementById('tabWarp').classList.remove('inactive');
-  document.getElementById('tabColor').classList.remove('inactive');
+<!-- Firebase SDKs -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { 
+        getAuth, 
+        signInAnonymously, 
+        signInWithCustomToken, 
+        onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+        getFirestore, 
+        collection, 
+        addDoc, 
+        onSnapshot, 
+        query, 
+        orderBy,
+        setDoc,
+        doc,
+        serverTimestamp,
+        setLogLevel
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-  if(name==='warp'){
-    document.getElementById('warp').classList.add('active');
-    document.getElementById('tabColor').classList.add('inactive');
-  } else {
-    document.getElementById('color').classList.add('active');
-    document.getElementById('tabWarp').classList.add('inactive');
-  }
-}
+    // Set Firestore log level to Debug (optional, for debugging)
+    // setLogLevel('debug'); 
 
-// shared input sync
-function syncInputs(){
-  const ids = ['yarn','reed','width','matches'];
-  ids.forEach(id=>{
-    const warp=document.getElementById(id+'Warp');
-    const color=document.getElementById(id+'Color');
-    if(document.activeElement===warp) color.value=warp.value;
-    if(document.activeElement===color) warp.value=color.value;
-  });
-  computeColorLive();
-}
+    // --- Global Variables ---
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-// parse reed like 72/2
-function parseReed(v){
-  if(!v) return null;
-  const p=v.replace(/\s+/g,'').split('/');
-  const n=parseFloat(p[0]), d=parseFloat(p[1]);
-  if(isNaN(n)||isNaN(d)) return null;
-  return {n,d};
-}
+    let app;
+    let db;
+    let auth;
+    let userId = null;
+    let isAuthReady = false;
+    let imagesCollectionRef = null;
 
-// compute warp
-function computeWarp(){
-  const yarn=document.getElementById('yarnWarp').value;
-  const reed=parseReed(document.getElementById('reedWarp').value);
-  const width=parseFloat(document.getElementById('widthWarp').value);
-  const matches=parseInt(document.getElementById('matchesWarp').value);
-  const out=document.getElementById('warpOutput');
+    // --- Utility Functions ---
 
-  if(!reed||isNaN(width)||width<=0){out.innerText="⚠️ Invalid inputs";return;}
-  const epi=(reed.n/2)*reed.d;
-  const total=Math.round(epi*width);
-  const totalSelv=yarn==='fine'?300:200;
-  const eachSelv=totalSelv/2;
-  const mid=yarn==='fine'?30:20;
-  const midTot=(matches-1)*mid;
-  const bodyTot=total-totalSelv;
-  const dist=bodyTot-midTot;
-  const base=Math.floor(dist/matches);
-  const parts=new Array(matches).fill(base);
-  let cur=1;const ranges=[];
-  ranges.push({label:'Left Selvage',start:cur,end:cur+eachSelv-1});cur+=eachSelv;
-  for(let i=0;i<matches;i++){
-    ranges.push({label:`Body ${i+1}`,start:cur,end:cur+parts[i]-1});cur+=parts[i];
-    if(i<matches-1){ranges.push({label:'Mid Selvage',start:cur,end:cur+mid-1});cur+=mid;}
-  }
-  ranges.push({label:'Right Selvage',start:cur,end:total});
-  let txt=`EPI: ${epi.toFixed(2)}\nTotal Ends: ${total}\n\nWarping Construction:\n`;
-  ranges.forEach(r=>txt+=`${r.start}-${r.end} ${r.label}\n`);
-  out.innerText=txt;
-  computeColorLive();
-}
+    /** Shows a custom modal message */
+    window.showMessage = function(title, message, type = 'info') {
+        const container = document.getElementById('modal-container');
+        const content = document.getElementById('modal-content');
+        
+        let color, icon;
+        if (type === 'error') {
+            color = 'text-red-600';
+            icon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+        } else {
+            color = 'text-blue-600';
+            icon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+        }
 
-// compute color
-function computeColorLive(){
-  const yarn=document.getElementById('yarnColor').value;
-  const reed=parseReed(document.getElementById('reedColor').value);
-  const width=parseFloat(document.getElementById('widthColor').value);
-  const matches=parseInt(document.getElementById('matchesColor').value);
-  const repeat=parseFloat(document.getElementById('repeatEnds').value);
-  const multi=parseFloat(document.getElementById('multiplier').value);
-  const out=document.getElementById('colorOutput');
-  if(!reed||isNaN(width)||width<=0){out.innerText="⚠️ Invalid inputs";return;}
-  const epi=(reed.n/2)*reed.d;
-  const total=Math.round(epi*width);
-  const totalSelv=yarn==='fine'?300:200;
-  const mid=yarn==='fine'?30:20;
-  const midTot=(matches-1)*mid;
-  const bodyTot=total-totalSelv;
-  const dist=bodyTot-midTot;
-  const bodyPer=Math.floor(dist/matches);
-  const div=repeat?bodyPer/repeat:null;
-  const final=(div&&multi)?div*multi:null;
-  let text=`Body Total: ${bodyTot}\nBody/Match: ${bodyPer}\nRepeat: ${repeat||'—'}\nDivision: ${div?div.toFixed(4):'—'}\nMultiplier: ${multi||'—'}\n\nFinal: ${final?'<span class="blue-bold">'+final.toFixed(4)+'</span>':'—'}`;
-  out.innerHTML=text;
-}
+        content.innerHTML = `
+            <div class="flex items-center mb-4">
+                <div class="${color} mr-3">${icon}</div>
+                <h3 class="text-lg font-bold text-gray-900">${title}</h3>
+            </div>
+            <p class="text-sm text-gray-700 mb-6">${message}</p>
+            <button onclick="closeModal()" class="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-150">Close</button>
+        `;
+        container.classList.remove('hidden');
+        container.classList.add('flex');
+    };
 
-// font customization
-function setupFontControls(idOut,idSize,idColor){
-  const out=document.getElementById(idOut);
-  const s=document.getElementById(idSize);
-  const c=document.getElementById(idColor);
-  const update=()=>{out.style.fontSize=s.value+'px';out.style.color=c.value;}
-  s.addEventListener('input',update);
-  c.addEventListener('input',update);
-}
-setupFontControls('warpOutput','warpFontSize','warpFontColor');
-setupFontControls('colorOutput','colorFontSize','colorFontColor');
+    /** Closes the custom modal */
+    window.closeModal = function() {
+        document.getElementById('modal-container').classList.remove('flex');
+        document.getElementById('modal-container').classList.add('hidden');
+    };
+
+    /** Converts a File object to a Base64 Data URL */
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    /** Formats bytes to a readable string */
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    /** Renders the image list from data */
+    function renderImages(images) {
+        const listContainer = document.getElementById('images-list');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const emptyState = document.getElementById('empty-state');
+
+        loadingIndicator.classList.add('hidden');
+        listContainer.innerHTML = '';
+
+        if (images.length === 0) {
+            emptyState.classList.remove('hidden');
+            return;
+        }
+        emptyState.classList.add('hidden');
+
+        images.forEach(image => {
+            const card = document.createElement('div');
+            card.className = 'bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 transform hover:scale-[1.01]';
+            
+            const imageSize = image.dataUrl ? formatBytes(atob(image.dataUrl.split(',')[1]).length) : 'N/A';
+
+            card.innerHTML = `
+                <div class="w-full h-48 bg-gray-200 flex items-center justify-center overflow-hidden">
+                    <img 
+                        src="${image.dataUrl}" 
+                        alt="${image.filename}" 
+                        class="h-full w-full object-cover" 
+                        loading="lazy"
+                        onerror="this.onerror=null; this.src='https://placehold.co/400x300/e0e0e0/555555?text=Image+Load+Error';"
+                    >
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold truncate text-gray-800" title="${image.filename}">${image.filename}</h3>
+                    <p class="text-xs text-gray-500 mt-1">Uploaded by: <span class="font-mono text-blue-500">${image.userId}</span></p>
+                    <p class="text-xs text-gray-500">Size: ${imageSize}</p>
+                    <p class="text-xs text-gray-500">Date: ${new Date(image.timestamp).toLocaleDateString()}</p>
+                    <a href="${image.dataUrl}" download="${image.filename}" class="mt-4 inline-block w-full text-center px-4 py-2 text-sm text-white bg-green-600 rounded-lg font-medium shadow-md hover:bg-green-700 transition duration-150 ease-in-out">
+                        Download Image
+                    </a>
+                </div>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
+
+    // --- Firebase Initialization and Authentication ---
+
+    async function initFirebase() {
+        try {
+            if (!Object.keys(firebaseConfig).length) {
+                console.error("Firebase config is missing.");
+                document.getElementById('auth-status').textContent = "ERROR: Firebase configuration is missing.";
+                return;
+            }
+
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // Public collection path for shared images
+            imagesCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'images');
+
+            // Handle Authentication State
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    isAuthReady = true;
+                    document.getElementById('auth-status').innerHTML = `Logged in as: <span class="font-mono font-bold text-gray-900">${userId}</span> (Public Uploads)`;
+                    document.getElementById('upload-btn').disabled = false;
+                    // Start listening for image changes
+                    listenForImages();
+                } else {
+                    // Sign in with custom token or anonymously if not available
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                }
+            });
+        } catch (error) {
+            console.error("Error initializing Firebase or signing in:", error);
+            showMessage("Initialization Error", "Could not initialize the application. Check the console for details.", 'error');
+        }
+    }
+
+    // --- Firestore Operations ---
+
+    /** Sets up real-time listener for images */
+    function listenForImages() {
+        if (!isAuthReady || !imagesCollectionRef) return;
+
+        // Query to get all images, ordered by timestamp descending
+        const q = query(imagesCollectionRef, orderBy("timestamp", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const images = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                images.push({
+                    id: doc.id,
+                    ...data,
+                    // Ensure timestamp is a number for sorting stability if needed
+                    timestamp: data.timestamp?.toDate()?.getTime() || Date.now(),
+                });
+            });
+            renderImages(images);
+        }, (error) => {
+            console.error("Error listening to images collection:", error);
+            showMessage("Data Error", "Failed to load shared images in real-time.", 'error');
+        });
+    }
+
+    /** Handles the image upload process */
+    window.handleUpload = async function() {
+        if (!isAuthReady || !userId) {
+            showMessage("Authentication Required", "Please wait for authentication to complete before uploading.", 'error');
+            return;
+        }
+
+        const fileInput = document.getElementById('file-upload');
+        const uploadMessage = document.getElementById('upload-message');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            uploadMessage.textContent = "Please select a file first.";
+            uploadMessage.className = 'mt-3 text-sm font-medium text-red-500';
+            return;
+        }
+
+        const MAX_SIZE_BYTES = 500 * 1024; // 500 KB limit
+        if (file.size > MAX_SIZE_BYTES) {
+            uploadMessage.textContent = `File is too large! Max size is 500 KB. This file is ${formatBytes(file.size)}.`;
+            uploadMessage.className = 'mt-3 text-sm font-medium text-red-500';
+            return;
+        }
+
+        uploadMessage.textContent = "Processing and uploading...";
+        uploadMessage.className = 'mt-3 text-sm font-medium text-blue-500';
+        document.getElementById('upload-btn').disabled = true;
+
+        try {
+            const dataUrl = await fileToBase64(file);
+
+            // The data to save in Firestore
+            const imageDoc = {
+                userId: userId,
+                filename: file.name,
+                mimeType: file.type,
+                timestamp: serverTimestamp(),
+                dataUrl: dataUrl // Storing the full base64 data URL
+            };
+
+            await addDoc(imagesCollectionRef, imageDoc);
+
+            uploadMessage.textContent = `Successfully uploaded "${file.name}"!`;
+            uploadMessage.className = 'mt-3 text-sm font-medium text-green-600';
+            fileInput.value = ''; // Clear file input
+        } catch (e) {
+            console.error("Error uploading document: ", e);
+            showMessage("Upload Failed", "An error occurred during upload. Check console for details.", 'error');
+            uploadMessage.textContent = "Upload failed.";
+            uploadMessage.className = 'mt-3 text-sm font-medium text-red-500';
+        } finally {
+            document.getElementById('upload-btn').disabled = false;
+        }
+    }
+
+    // Initialize the application when the window loads
+    window.onload = initFirebase;
+
 </script>
+
 </body>
 </html>
+
