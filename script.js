@@ -2,10 +2,9 @@ document.addEventListener('DOMContentLoaded', initializeFabricGenerator);
 
 // Global Variables
 let canvas, ctx;
-let warpColorPicker, weftColorPicker, threadSizeInput, threadSizeValueSpan, weaveTypeSelect, threadingInput, pegPlanInput;
+let warpColorPicker, weftColorPicker, threadSizeInput, threadSizeValueSpan, weaveTypeSelect, threadingInput, pegPlanInput; // **ALL NEW IDs ARE HERE**
 
 // --- WEAVE PATTERNS (PRESETS) ---
-// We'll use these only for default values, the main logic will use threading/pegPlan
 const PATTERNS = {
     plain: {
         threading: [1, 2, 1, 2],
@@ -15,7 +14,6 @@ const PATTERNS = {
         threading: [1, 2, 3, 4],
         pegPlan: ["x . . .", ". x . .", ". . x .", ". . . x"]
     },
-    // Custom will read inputs directly
 };
 
 // --- HELPER FUNCTIONS ---
@@ -38,10 +36,10 @@ function parsePlan(inputString, isPegPlan = false) {
         const lines = inputString.trim().split('\n').filter(line => line.trim().length > 0);
         
         if (isPegPlan) {
-            // Peg Plan: Array of arrays (1 for 'x', 0 for '.')
+            // Peg Plan: Array of arrays ('x' -> 1, '.' -> 0)
             const matrix = lines.map(line => 
                 line.trim().split(/\s+/).map(char => (char === 'x' || char === '#') ? 1 : 0)
-            );
+            ).filter(row => row.length > 0);
             return matrix;
         } else {
             // Threading Plan: Single array of harness numbers
@@ -49,7 +47,7 @@ function parsePlan(inputString, isPegPlan = false) {
         }
     } catch (e) {
         console.error("Parsing Error:", e);
-        return isPegPlan ? [[1, 0], [0, 1]] : [1, 2]; // Return safe defaults
+        return isPegPlan ? [[0]] : [1]; // Return minimal safe defaults
     }
 }
 
@@ -63,7 +61,6 @@ function applyNoise(baseColor, x, y, NOISE_FACTOR) {
 }
 
 function applyShading(baseColor, pos, HALF_THREAD, SHADE_FACTOR) {
-    // Shading functions remain the same (optimized for realism)
     let adjustment = 0;
     let deep_shadow = 0;
     adjustment = SHADE_FACTOR * Math.sin((pos / HALF_THREAD) * Math.PI); 
@@ -114,31 +111,26 @@ function drawFabric() {
     
     let threadingPlan, pegPlanMatrix;
 
+    // 1. Get Plans based on selection
     if (currentWeaveType === 'custom') {
-        // Parse directly from text inputs
         threadingPlan = parsePlan(threadingInput.value, false);
         pegPlanMatrix = parsePlan(pegPlanInput.value, true);
     } else {
-        // Use preset values
         const preset = PATTERNS[currentWeaveType];
-        threadingPlan = parsePlan(preset.threading.join(' '), false); // Convert array to string for consistent parsing
+        // Ensure presets are parsed consistently
+        threadingPlan = parsePlan(preset.threading.join(' '), false);
         pegPlanMatrix = preset.pegPlan.map(row => parsePlan(row, true)[0]);
     }
 
-    // Safety check for empty plans
-    if (threadingPlan.length === 0 || pegPlanMatrix.length === 0) {
+    // 2. Safety Check for empty plans
+    if (threadingPlan.length === 0 || pegPlanMatrix.length === 0 || pegPlanMatrix[0].length === 0) {
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
         return; 
     }
 
-    const THREAD_REPEAT_SIZE = threadingPlan.length; // Warp repeat width
-    const WEFT_REPEAT_SIZE = pegPlanMatrix.length;    // Weft repeat height
-    const HARNESS_COUNT = pegPlanMatrix[0] ? pegPlanMatrix[0].length : 0; // Number of columns in peg plan
-
-    if (HARNESS_COUNT === 0) {
-        ctx.clearRect(0, 0, WIDTH, HEIGHT);
-        return; 
-    }
+    const THREAD_REPEAT_SIZE = threadingPlan.length; 
+    const WEFT_REPEAT_SIZE = pegPlanMatrix.length;    
+    const HARNESS_COUNT = pegPlanMatrix[0].length; // Number of columns in peg plan
 
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
@@ -149,24 +141,21 @@ function drawFabric() {
             const lx = x % HALF_THREAD; 
             const ly = y % HALF_THREAD; 
 
-            // 1. Determine which Warp thread index we are on (Horizontal Position)
+            // 1. Determine which Warp thread index we are on
             const threadIndex = Math.floor(x / HALF_THREAD) % THREAD_REPEAT_SIZE;
             
-            // 2. Determine which Weft thread index we are on (Vertical Position)
+            // 2. Determine which Weft thread index we are on
             const weftIndex = Math.floor(y / HALF_THREAD) % WEFT_REPEAT_SIZE;
             
-            // 3. Find the Harness associated with the current Warp thread
-            // Harness numbers start from 1, so subtract 1 for array index
+            // 3. Find the Harness (Harness number starts from 1, subtract 1 for array index)
             const harnessNumber = threadingPlan[threadIndex]; 
             const harnessIndex = harnessNumber - 1; 
 
-            // 4. Look up the Peg Plan (Lifting Order)
-            // If Harness is UP (1), Warp is on top.
+            // 4. Look up the Peg Plan
             let isWarpOver = false;
             
-            // Check boundaries
             if (harnessIndex >= 0 && harnessIndex < HARNESS_COUNT) {
-                 // pegPlanMatrix[row: Weft Index][column: Harness Index]
+                 // Check if the harness is lifted at this weft index
                  isWarpOver = pegPlanMatrix[weftIndex][harnessIndex] === 1;
             }
 
@@ -196,23 +185,24 @@ function initializeFabricGenerator() {
     ctx = canvas.getContext('2d');
 
     // Access HTML Controls
+    // **CRITICAL: Ensure all these IDs match your HTML exactly.**
     warpColorPicker = document.getElementById('warpColor');
     weftColorPicker = document.getElementById('weftColor');
     threadSizeInput = document.getElementById('threadSize');
     threadSizeValueSpan = document.getElementById('threadSizeValue');
     weaveTypeSelect = document.getElementById('weaveType');
-    threadingInput = document.getElementById('threadingInput'); // New Input
-    pegPlanInput = document.getElementById('pegPlanInput');     // New Input
+    threadingInput = document.getElementById('threadingInput'); 
+    pegPlanInput = document.getElementById('pegPlanInput');     
 
     // Set Event Listeners
     warpColorPicker.addEventListener('input', drawFabric);
     weftColorPicker.addEventListener('input', drawFabric);
     threadSizeInput.addEventListener('input', drawFabric);
-    weaveTypeSelect.addEventListener('change', drawFabric);
-    threadingInput.addEventListener('input', drawFabric); // Listen to changes
-    pegPlanInput.addEventListener('input', drawFabric);     // Listen to changes
+    pegPlanInput.addEventListener('input', drawFabric);     
+    threadingInput.addEventListener('input', drawFabric); 
+    
+    // Logic to load presets when dropdown changes
     weaveTypeSelect.addEventListener('change', function() {
-        // Load correct defaults when changing preset type
         if (weaveTypeSelect.value === 'plain') {
             threadingInput.value = '1 2 1 2';
             pegPlanInput.value = 'x .\n. x';
