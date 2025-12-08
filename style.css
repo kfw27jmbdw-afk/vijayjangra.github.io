@@ -18,4 +18,19 @@ canvas {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
+    width: 90%; /* कंट्रोल पैनल की चौड़ाई बढ़ाएँ */
+    max-width: 500px;
+}
+/* नए टेक्स्ट एरिया (Peg Plan) के लिए स्टाइलिंग */
+textarea {
+    width: 95%; /* चौड़ाई ज़्यादा हो ताकि पग प्लान मैट्रिक्स फिट हो सके */
+    min-height: 50px;
+    font-family: monospace; /* यह ज़रूरी है ताकि 'x' और '.' बिल्कुल एक-दूसरे के नीचे दिखें */
+    font-size: 14px;
+    padding: 5px;
+    box-sizing: border-box;
+}
+p {
+    margin: 4px 0 2px 0; /* इंस्ट्रक्शन टेक्स्ट के लिए कम मार्जिन */
+    color: #555;
 }
