@@ -1,36 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Realistic Fabric Generator</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<div id="controls">
+    <h2>Fabric Adjustments</h2>
+    
+    <label for="weaveType">Weave:</label>
+    <select id="weaveType">
+        <option value="plain">Plain Weave (Default)</option>
+        <option value="twill">Twill Weave</option>
+        <option value="custom" selected>Custom Matrix (Edit Below)</option>
+    </select>
+    <br>
 
-    <div id="controls">
-        <h2>Fabric Adjustments</h2>
-        
-        <label for="weaveType">Weave:</label>
-        <select id="weaveType">
-            <option value="plain" selected>Plain Weave (Linen Look)</option>
-            <option value="twill">Twill Weave (Denim Look)</option>
-        </select>
-        <br><br>
+    <label for="matrixInput">Custom Peg Plan Matrix (Use 1 for Warp Over, 0 for Weft Over. Separate rows with a new line):</label>
+    <textarea id="matrixInput" rows="4" cols="20">1 1 1 0
+0 1 1 1
+1 0 1 1
+1 1 0 1</textarea>
+    <br>
 
-        <label for="threadSize">Thread Thickness (Pixels):</label>
-        <input type="range" id="threadSize" min="2" max="30" value="2">
-        <span id="threadSizeValue">2</span>
-        <br><br>
-        
-        <label for="warpColor">Warp Color (Vertical):</label>
-        <input type="color" id="warpColor" value="#B49D82"> 
-        <br><br>
-        
-        <label for="weftColor">Weft Color (Horizontal):</label>
-        <input type="color" id="weftColor" value="#C8B89C">
-    </div>
+    <label for="threadSize">Thread Thickness (Pixels):</label>
+    <input type="range" id="threadSize" min="2" max="30" value="8">
+    <span id="threadSizeValue">8</span>
+    <br><br>
+    
+    <label for="warpColor">Warp Color (Vertical):</label>
+    <input type="color" id="warpColor" value="#325096"> 
+    <br><br>
+    
+    <label for="weftColor">Weft Color (Horizontal):</label>
+    <input type="color" id="weftColor" value="#E0E0E0">
+</div>
 
-    <canvas id="fabricCanvas" width="600" height="400"></canvas>
-
-    <script src="script.js"></script>
-</body>
-</html>
+<canvas id="fabricCanvas" width="600" height="400"></canvas>
