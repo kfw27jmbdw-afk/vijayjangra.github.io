@@ -38,7 +38,6 @@ function clamp(value) {
     return Math.min(255, Math.max(0, value));
 }
 
-// धागे में अनियमितता (fuzziness) जोड़ने के लिए नॉइज़ फंक्शन
 function applyNoise(baseColor, x, y, NOISE_FACTOR) {
     const seed = Math.sin(x * 0.1 + y * 0.1) * 10000;
     const random_val = (seed - Math.floor(seed)) * NOISE_FACTOR * 2 - NOISE_FACTOR; 
@@ -50,7 +49,7 @@ function applyNoise(baseColor, x, y, NOISE_FACTOR) {
     return [r, g, b];
 }
 
-// शेडिंग फंक्शन: इसमें गोलाई (curvature) और गहरी छाया (deep shadow) दोनों शामिल हैं
+// यह शेडिंग फंक्शन डीप शैडो (गहरी छाया) का उपयोग करके विकर्ण भ्रम को तोड़ता है
 function applyShading(baseColor, pos, HALF_THREAD, SHADE_FACTOR) {
     let adjustment = 0;
     let deep_shadow = 0;
@@ -58,11 +57,10 @@ function applyShading(baseColor, pos, HALF_THREAD, SHADE_FACTOR) {
     // 1. Shading for Curvature (गोलाई के लिए लाइटिंग)
     adjustment = SHADE_FACTOR * Math.sin((pos / HALF_THREAD) * Math.PI); 
 
-    // 2. Deep Shadowing Logic (गहरी छाया के लिए लॉजिक): विकर्ण भ्रम तोड़ने के लिए
-    const EDGE_SIZE = 1; // 1 पिक्सेल चौड़ी छाया
-    const DEEP_SHADE_FACTOR = 50; // छाया की तीव्रता
+    // 2. Deep Shadowing Logic: किनारे पर गहरी छाया
+    const EDGE_SIZE = 1; 
+    const DEEP_SHADE_FACTOR = 100; // हाई कंट्रास्ट के लिए 100 सेट किया गया
 
-    // धागे के किनारे (जहाँ यह नीचे जाता है) पर गहरी छाया लागू करें
     if (pos < EDGE_SIZE || pos >= HALF_THREAD - EDGE_SIZE) {
         deep_shadow = -DEEP_SHADE_FACTOR;
     }
@@ -95,7 +93,7 @@ function drawFabric() {
     
     const HALF_THREAD = THREAD_PIXELS / 2;
     
-    // सेटिंग्स
+    // अन्य सेटिंग्स
     const NOISE_FACTOR = 15; 
     const SHADE_FACTOR = 75; 
     
