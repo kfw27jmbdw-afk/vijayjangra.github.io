@@ -1,42 +1,11 @@
-<div id="controls">
-    <h2>Fabric Adjustments</h2>
-    
-    <label for="weaveType">Weave:</label>
-    <select id="weaveType">
-        <option value="plain">Plain Weave (Default)</option>
-        <option value="twill">Twill Weave</option>
-        <option value="custom" selected>Full Drafting Plan (Edit Below)</option>
-    </select>
-    <br><br>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Custom Realistic Fabric Generator</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
 
-    <label for="threadingInput">1. Threading Diagram (Warp Thread to Harness):</label>
-    <p style="font-size: 10px; margin: 0;">(Harness number for each Warp thread. Example: 1 2 3 4 1 2 3 4)</p>
-    <textarea id="threadingInput" rows="1" cols="30">1 2 3 4 5 6 7 8</textarea>
-    <br>
-
-    <label for="pegPlanInput">2. Peg Plan (Harness Lifting Plan):</label>
-    <p style="font-size: 10px; margin: 0;">('x' = Up, '.' = Down. Rows are Weft, Columns are Harnesses)</p>
-    <textarea id="pegPlanInput" rows="8" cols="10">x . . . . . . .
-. x . . . . . .
-. . x . . . . .
-. . . x . . . .
-. . . . x . . .
-. . . . . x . .
-. . . . . . x .
-. . . . . . . x</textarea>
-    <br>
-
-    <label for="threadSize">Thread Thickness (Pixels):</label>
-    <input type="range" id="threadSize" min="2" max="30" value="8">
-    <span id="threadSizeValue">8</span>
-    <br><br>
-    
-    <label for="warpColor">Warp Color (Vertical):</label>
-    <input type="color" id="warpColor" value="#325096"> 
-    <br><br>
-    
-    <label for="weftColor">Weft Color (Horizontal):</label>
-    <input type="color" id="weftColor" value="#E0E0E0">
-</div>
-
-<canvas id="fabricCanvas" width="600" height="400"></canvas>
+    <script src="script.js"></script>
+</body>
+</html>
