@@ -225,3 +225,4 @@ function initializeFabricGenerator() {
 
     // Draw fabric on load
     drawFabric();
+}
