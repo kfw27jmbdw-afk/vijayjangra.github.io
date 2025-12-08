@@ -2,27 +2,20 @@ document.addEventListener('DOMContentLoaded', initializeFabricGenerator);
 
 // Global Variables
 let canvas, ctx;
-let warpColorPicker, weftColorPicker, threadSizeInput, threadSizeValueSpan, weaveTypeSelect, matrixInput;
+let warpColorPicker, weftColorPicker, threadSizeInput, threadSizeValueSpan, weaveTypeSelect, threadingInput, pegPlanInput;
 
-// --- WEAVE PATTERNS ---
+// --- WEAVE PATTERNS (PRESETS) ---
+// We'll use these only for default values, the main logic will use threading/pegPlan
 const PATTERNS = {
     plain: {
-        matrix: [
-            [1, 0],
-            [0, 1]
-        ],
-        size: 2
+        threading: [1, 2, 1, 2],
+        pegPlan: ["x .", ". x"]
     },
     twill: {
-        matrix: [
-            [1, 1, 1, 0], 
-            [0, 1, 1, 1], 
-            [1, 0, 1, 1], 
-            [1, 1, 0, 1]
-        ],
-        size: 4
-    }
-    // 'custom' will be handled by parsing the textarea
+        threading: [1, 2, 3, 4],
+        pegPlan: ["x . . .", ". x . .", ". . x .", ". . . x"]
+    },
+    // Custom will read inputs directly
 };
 
 // --- HELPER FUNCTIONS ---
@@ -39,30 +32,27 @@ function clamp(value) {
     return Math.min(255, Math.max(0, value));
 }
 
-// Function to parse the user's string input into a matrix
-function parseMatrix(inputString) {
+// Parses the input string into a numeric array (Threading) or 2D array (Peg Plan)
+function parsePlan(inputString, isPegPlan = false) {
     try {
-        const rows = inputString.trim().split('\n');
-        const matrix = rows.map(row => 
-            row.trim().split(/\s+/).map(Number) // Splits by any space/tab and converts to number
-        );
+        const lines = inputString.trim().split('\n').filter(line => line.trim().length > 0);
         
-        // Basic validation: ensure all rows have the same number of columns
-        const firstRowLength = matrix[0].length;
-        if (matrix.some(row => row.length !== firstRowLength)) {
-            console.error("Matrix error: Rows have different lengths.");
-            return { matrix: PATTERNS.twill.matrix, size: 4 };
+        if (isPegPlan) {
+            // Peg Plan: Array of arrays (1 for 'x', 0 for '.')
+            const matrix = lines.map(line => 
+                line.trim().split(/\s+/).map(char => (char === 'x' || char === '#') ? 1 : 0)
+            );
+            return matrix;
+        } else {
+            // Threading Plan: Single array of harness numbers
+            return lines[0].trim().split(/\s+/).map(Number).filter(n => n > 0);
         }
-        
-        return { matrix: matrix, size: firstRowLength };
     } catch (e) {
-        console.error("Error parsing matrix input:", e);
-        // Return a default matrix on error
-        return { matrix: PATTERNS.twill.matrix, size: 4 }; 
+        console.error("Parsing Error:", e);
+        return isPegPlan ? [[1, 0], [0, 1]] : [1, 2]; // Return safe defaults
     }
 }
 
-// Noise, Shading, etc. functions remain the same
 function applyNoise(baseColor, x, y, NOISE_FACTOR) {
     const seed = Math.sin(x * 0.1 + y * 0.1) * 10000;
     const random_val = (seed - Math.floor(seed)) * NOISE_FACTOR * 2 - NOISE_FACTOR; 
@@ -73,20 +63,16 @@ function applyNoise(baseColor, x, y, NOISE_FACTOR) {
 }
 
 function applyShading(baseColor, pos, HALF_THREAD, SHADE_FACTOR) {
+    // Shading functions remain the same (optimized for realism)
     let adjustment = 0;
     let deep_shadow = 0;
-    
-    // 1. Shading for Curvature
     adjustment = SHADE_FACTOR * Math.sin((pos / HALF_THREAD) * Math.PI); 
-
-    // 2. Deep Shadowing Logic (Breaks the diagonal illusion)
     const EDGE_SIZE = 1; 
     const DEEP_SHADE_FACTOR = 100;
 
     if (pos < EDGE_SIZE || pos >= HALF_THREAD - EDGE_SIZE) {
         deep_shadow = -DEEP_SHADE_FACTOR;
     }
-
     const final_adjustment = adjustment + deep_shadow;
     
     const r = clamp(baseColor[0] + final_adjustment);
@@ -104,7 +90,7 @@ function drawFabric() {
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
     
-    // Safety Check: THREAD_PIXELS minimum 2
+    // Safety Check: THREAD_PIXELS
     let THREAD_PIXELS = parseInt(threadSizeInput.value);
     if (THREAD_PIXELS < 2 || THREAD_PIXELS % 2 !== 0) {
         THREAD_PIXELS = 2; 
@@ -118,26 +104,42 @@ function drawFabric() {
     const NOISE_FACTOR = 15; 
     const SHADE_FACTOR = 75; 
     
-    // Colors and Weave Selection
+    // Colors
     const WARP_COLOR = hexToRgb(warpColorPicker.value);
     const WEFT_COLOR = hexToRgb(weftColorPicker.value);
     
+    // --- DRAFTING PLAN LOGIC (The Core Change) ---
+    
     const currentWeaveType = weaveTypeSelect.value;
     
-    let weaveMatrix, MATRIX_SIZE;
-    
+    let threadingPlan, pegPlanMatrix;
+
     if (currentWeaveType === 'custom') {
-        // Use the custom matrix entered by the user
-        const result = parseMatrix(matrixInput.value);
-        weaveMatrix = result.matrix;
-        MATRIX_SIZE = result.size;
+        // Parse directly from text inputs
+        threadingPlan = parsePlan(threadingInput.value, false);
+        pegPlanMatrix = parsePlan(pegPlanInput.value, true);
     } else {
-        // Use the preset matrix (Plain or Twill)
-        weaveMatrix = PATTERNS[currentWeaveType].matrix;
-        MATRIX_SIZE = PATTERNS[currentWeaveType].size;
+        // Use preset values
+        const preset = PATTERNS[currentWeaveType];
+        threadingPlan = parsePlan(preset.threading.join(' '), false); // Convert array to string for consistent parsing
+        pegPlanMatrix = preset.pegPlan.map(row => parsePlan(row, true)[0]);
     }
-    
-    // Clear canvas
+
+    // Safety check for empty plans
+    if (threadingPlan.length === 0 || pegPlanMatrix.length === 0) {
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        return; 
+    }
+
+    const THREAD_REPEAT_SIZE = threadingPlan.length; // Warp repeat width
+    const WEFT_REPEAT_SIZE = pegPlanMatrix.length;    // Weft repeat height
+    const HARNESS_COUNT = pegPlanMatrix[0] ? pegPlanMatrix[0].length : 0; // Number of columns in peg plan
+
+    if (HARNESS_COUNT === 0) {
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        return; 
+    }
+
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
     for (let y = 0; y < HEIGHT; y++) {
@@ -147,24 +149,36 @@ function drawFabric() {
             const lx = x % HALF_THREAD; 
             const ly = y % HALF_THREAD; 
 
-            // Matrix Index (MODULO the size of the current matrix, not fixed 4)
-            const tx = Math.floor(x / HALF_THREAD) % MATRIX_SIZE; 
-            const ty = Math.floor(y / HALF_THREAD) % weaveMatrix.length; // Use matrix height for vertical repeat
-
-            // Check the weave matrix value (This is the drawing order/peg plan)
-            const isWarpOver = weaveMatrix[ty][tx] === 1;
+            // 1. Determine which Warp thread index we are on (Horizontal Position)
+            const threadIndex = Math.floor(x / HALF_THREAD) % THREAD_REPEAT_SIZE;
             
+            // 2. Determine which Weft thread index we are on (Vertical Position)
+            const weftIndex = Math.floor(y / HALF_THREAD) % WEFT_REPEAT_SIZE;
+            
+            // 3. Find the Harness associated with the current Warp thread
+            // Harness numbers start from 1, so subtract 1 for array index
+            const harnessNumber = threadingPlan[threadIndex]; 
+            const harnessIndex = harnessNumber - 1; 
+
+            // 4. Look up the Peg Plan (Lifting Order)
+            // If Harness is UP (1), Warp is on top.
+            let isWarpOver = false;
+            
+            // Check boundaries
+            if (harnessIndex >= 0 && harnessIndex < HARNESS_COUNT) {
+                 // pegPlanMatrix[row: Weft Index][column: Harness Index]
+                 isWarpOver = pegPlanMatrix[weftIndex][harnessIndex] === 1;
+            }
+
             let finalColorString;
             let baseColorArray;
 
             if (isWarpOver) {
                 baseColorArray = WARP_COLOR;
-                // Warp (Vertical) is on top: Shade based on X-axis
                 const noisyColor = applyNoise(baseColorArray, x, y, NOISE_FACTOR);
                 finalColorString = applyShading(noisyColor, lx, HALF_THREAD, SHADE_FACTOR);
             } else {
                 baseColorArray = WEFT_COLOR;
-                // Weft (Horizontal) is on top: Shade based on Y-axis
                 const noisyColor = applyNoise(baseColorArray, x, y, NOISE_FACTOR);
                 finalColorString = applyShading(noisyColor, ly, HALF_THREAD, SHADE_FACTOR);
             }
@@ -187,14 +201,27 @@ function initializeFabricGenerator() {
     threadSizeInput = document.getElementById('threadSize');
     threadSizeValueSpan = document.getElementById('threadSizeValue');
     weaveTypeSelect = document.getElementById('weaveType');
-    matrixInput = document.getElementById('matrixInput'); // New Input
+    threadingInput = document.getElementById('threadingInput'); // New Input
+    pegPlanInput = document.getElementById('pegPlanInput');     // New Input
 
-    // Set Event Listeners to redraw on change
+    // Set Event Listeners
     warpColorPicker.addEventListener('input', drawFabric);
     weftColorPicker.addEventListener('input', drawFabric);
     threadSizeInput.addEventListener('input', drawFabric);
     weaveTypeSelect.addEventListener('change', drawFabric);
-    matrixInput.addEventListener('input', drawFabric); // New listener for custom input
+    threadingInput.addEventListener('input', drawFabric); // Listen to changes
+    pegPlanInput.addEventListener('input', drawFabric);     // Listen to changes
+    weaveTypeSelect.addEventListener('change', function() {
+        // Load correct defaults when changing preset type
+        if (weaveTypeSelect.value === 'plain') {
+            threadingInput.value = '1 2 1 2';
+            pegPlanInput.value = 'x .\n. x';
+        } else if (weaveTypeSelect.value === 'twill') {
+            threadingInput.value = '1 2 3 4';
+            pegPlanInput.value = 'x . . .\n. x . .\n. . x .\n. . . x';
+        }
+        drawFabric();
+    });
 
     // Draw fabric on load
     drawFabric();
