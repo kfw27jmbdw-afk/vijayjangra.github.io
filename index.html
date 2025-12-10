@@ -1,53 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Custom Realistic Fabric Generator</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fabric Generator</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
-<body>
 
+<body>
     <div id="controls">
         <h2>Fabric Adjustments</h2>
-        
+
         <label for="weaveType">Weave:</label>
         <select id="weaveType">
-            <option value="plain">Plain Weave (Default)</option>
+            <option value="plain">Plain Weave</option>
             <option value="twill">Twill Weave</option>
-            <option value="custom" selected>Full Drafting Plan (Edit Below)</option>
+            <option value="custom" selected>Custom</option>
         </select>
         <br><br>
 
-        <label for="threadingInput">1. Threading Diagram (Warp Thread to Harness):</label>
-        <p style="font-size: 10px; margin: 0;">(Harness number for each Warp thread. Example: 1 2 3 4 1 2 3 4)</p>
-        <textarea id="threadingInput" rows="1" cols="30">1 2 3 4 5 6 7 8</textarea>
+        <label>1. Threading Diagram (Warp to Harness):</label>
+        <div id="threadingContainer" class="draw-grid"></div>
         <br>
 
-        <label for="pegPlanInput">2. Peg Plan (Harness Lifting Plan):</label>
-        <p style="font-size: 10px; margin: 0;">('x' = Up, '.' = Down. Rows are Weft, Columns are Harnesses)</p>
-        <textarea id="pegPlanInput" rows="8" cols="10">x . . . . . . .
-. x . . . . . .
-. . x . . . . .
-. . . x . . . .
-. . . . x . . .
-. . . . . x . .
-. . . . . . x .
-. . . . . . . x</textarea>
+        <label>2. Peg Plan (Harness Lifting Plan):</label>
+        <div id="pegPlanContainer" class="draw-grid"></div>
         <br>
 
-        <label for="threadSize">Thread Thickness (Pixels):</label>
-        <input type="range" id="threadSize" min="2" max="30" value="8">
-        <span id="threadSizeValue">8</span>
+        <label>Warp Color:</label>
+        <input type="color" id="warpColorPicker" value="#000000" />
         <br><br>
-        
-        <label for="warpColor">Warp Color (Vertical):</label>
-        <input type="color" id="warpColor" value="#325096"> 
+
+        <label>Weft Color:</label>
+        <input type="color" id="weftColorPicker" value="#888888" />
         <br><br>
-        
-        <label for="weftColor">Weft Color (Horizontal):</label>
-        <input type="color" id="weftColor" value="#E0E0E0">
+
+        <label>Thread Size:</label>
+        <input type="range" id="threadSizeInput" min="1" max="20" value="6" />
+        <span id="threadSizeValue">6</span> px
+        <br><br>
+
+        <label>Grid Size:</label>
+        <input type="number" id="gridSizeInput" value="8" />
+        <br><br>
+
+        <label>Ends Per Inch (EPI):</label>
+        <input type="number" id="epiInput" value="30" />
+        <span id="epiOutput"></span>
+        <br><br>
+
+        <label>Picks Per Inch (PPI):</label>
+        <input type="number" id="ppiInput" value="30" />
+        <span id="ppiOutput"></span>
+        <br><br>
+
+        <label>Warp Count:</label>
+        <input type="number" id="warpCountInput" value="50" />
+        <br><br>
+
+        <label>Weft Count:</label>
+        <input type="number" id="weftCountInput" value="50" />
+        <br><br>
+
+        <label>Ends Per Dent:</label>
+        <input type="number" id="endsPerDentInput" value="2" />
+        <br><br>
+
+        <label>Reed Size:</label>
+        <input type="number" id="reedSizeInput" value="60" />
+        <br><br>
     </div>
 
-    <canvas id="fabricCanvas" width="600" height="400"></canvas>
+    <canvas id="fabricCanvas"></canvas>
 
     <script src="script.js"></script>
 </body>
