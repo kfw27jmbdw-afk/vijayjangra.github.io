@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify Full Player</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body { background-color: #000; color: white; display: flex; justify-content: center; overflow-x: hidden; }
@@ -28,10 +34,10 @@
             background: #1db954; color: black; padding: 12px; border-radius: 25px;
             text-align: center; font-weight: bold; cursor: pointer; margin: 15px 0; display: block;
         }
-        #song-list { list-style: none; margin-top: 20px; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+        #song-list { margin-top: 20px; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
         .song-item { padding: 10px; border-radius: 5px; color: #b3b3b3; cursor: pointer; transition: 0.3s; }
         .song-item:hover { background: rgba(255,255,255,0.1); }
-        .active { color: #1db954; font-weight: bold; background: rgba(29, 185, 84, 0.1); }
+        .active { color: #1db954; font-weight: bold; background: rgba(29,185,84,0.1); }
         #file-upload { display: none; }
     </style>
 </head>
@@ -39,18 +45,21 @@
 
 <div class="player-container">
     <audio id="main-audio"></audio>
-    <div style="text-align: center; font-size: 12px; opacity: 0.8; letter-spacing: 2px;">NOW PLAYING</div>
-    
+
+    <div style="text-align:center;font-size:12px;opacity:.8;letter-spacing:2px;">NOW PLAYING</div>
+
     <div class="album-art">
         <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500" id="cover">
     </div>
 
     <div class="song-info">
         <h2 id="title">No Music</h2>
-        <p id="artist">Upload multiple songs to start</p>
+        <p>Upload multiple songs to start</p>
     </div>
 
-    <label for="file-upload" class="upload-btn"><i class="fas fa-plus"></i> SELECT SONGS</label>
+    <label for="file-upload" class="upload-btn">
+        <i class="fas fa-plus"></i> SELECT SONGS
+    </label>
     <input type="file" id="file-upload" multiple accept="audio/*">
 
     <div class="seek-container">
@@ -62,17 +71,21 @@
     </div>
 
     <div class="controls">
-        <i class="fas fa-random"></i>
         <i class="fas fa-step-backward" id="prev"></i>
         <i class="fas fa-play-circle" id="play-btn"></i>
         <i class="fas fa-step-forward" id="next"></i>
-        <i class="fas fa-redo"></i>
     </div>
 
     <div id="song-list"></div>
 </div>
 
 <script src="script.js"></script>
+
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+}
+</script>
 
 </body>
 </html>
