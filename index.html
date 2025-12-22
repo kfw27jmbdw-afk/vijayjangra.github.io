@@ -3,216 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Playlist Player</title>
+    <title>Spotify Full Player</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: #000; color: white; display: flex; justify-content: center; }
-
+        body { background-color: #000; color: white; display: flex; justify-content: center; overflow-x: hidden; }
         .player-container {
             background: linear-gradient(to bottom, #7b1111 0%, #121212 100%);
-            width: 100%; max-width: 400px; min-height: 100vh;
-            padding: 30px; display: flex; flex-direction: column;
+            width: 100%; max-width: 450px; min-height: 100vh; padding: 25px;
+            display: flex; flex-direction: column;
         }
-
-        .top-nav { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 20px;}
-        
-        .album-art-container {
-            width: 100%; aspect-ratio: 1/1;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.6);
-            border-radius: 12px; overflow: hidden; margin-bottom: 30px;
+        .album-art { width: 100%; aspect-ratio: 1/1; border-radius: 10px; margin: 20px 0; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+        #cover { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; background: #333; }
+        .song-info h2 { font-size: 22px; margin-bottom: 5px; }
+        .song-info p { color: #b3b3b3; font-size: 14px; margin-bottom: 20px; }
+        .controls { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
+        #play-btn { font-size: 60px; cursor: pointer; }
+        .controls i { font-size: 25px; cursor: pointer; color: #b3b3b3; transition: 0.2s; }
+        .controls i:hover { color: white; }
+        .seek-container { width: 100%; margin-top: 10px; }
+        #seek-bar { width: 100%; accent-color: #1db954; cursor: pointer; }
+        .time { display: flex; justify-content: space-between; font-size: 12px; color: #b3b3b3; margin-top: 8px; }
+        .upload-btn {
+            background: #1db954; color: black; padding: 10px; border-radius: 20px;
+            text-align: center; font-weight: bold; cursor: pointer; margin: 15px 0; display: block;
         }
-        #cover { width: 100%; height: 100%; object-fit: cover; background: #282828; }
-
-        .song-details { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        #title { font-size: 22px; font-weight: bold; width: 85%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        #artist { color: #b3b3b3; font-size: 14px; margin-bottom: 20px; }
-
-        .upload-section { text-align: center; margin-bottom: 20px; }
-        .custom-file-upload {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-            color: white; padding: 8px 15px; border-radius: 20px;
-            cursor: pointer; font-size: 12px; font-weight: bold;
-        }
-
-        .seek-bar-container { width: 100%; }
-        #seek-bar { width: 100%; accent-color: #fff; cursor: pointer; }
-        .time-stamps { display: flex; justify-content: space-between; font-size: 12px; color: #b3b3b3; margin-top: 5px; }
-
-        .main-controls { display: flex; justify-content: space-around; align-items: center; margin: 25px 0; }
-        .main-controls i { font-size: 24px; cursor: pointer; color: #b3b3b3; }
-        .main-controls i:hover { color: white; }
-        #play-btn { font-size: 60px; color: white; }
-
-        /* Playlist UI */
-        .playlist-info { margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
-        .playlist-info h4 { font-size: 14px; margin-bottom: 10px; color: #1db954; }
-        #song-list { font-size: 13px; color: #b3b3b3; list-style: none; }
-        .active-song { color: white; font-weight: bold; }
-
+        #song-list { list-style: none; margin-top: 20px; font-size: 14px; }
+        .song-item { padding: 8px; border-bottom: 1px solid #222; color: #b3b3b3; cursor: pointer; }
+        .active { color: #1db954; font-weight: bold; }
         #file-upload { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="player-container">
-        <audio id="main-audio"></audio>
+<div class="player-container">
+    <audio id="main-audio"></audio>
+    <div style="text-align: center; font-size: 12px; opacity: 0.8;">NOW PLAYING</div>
+    
+    <div class="album-art">
+        <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500" id="cover">
+    </div>
 
-        <div class="top-nav">
-            <i class="fas fa-chevron-down"></i>
-            <span>PLAYING FROM YOUR UPLOADS</span>
-            <i class="fas fa-ellipsis-v"></i>
-        </div>
+    <div class="song-info">
+        <h2 id="title">No Music</h2>
+        <p id="artist">Upload multiple songs</p>
+    </div>
 
-        <div class="album-art-container">
-            <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=500" id="cover">
-        </div>
+    <label for="file-upload" class="upload-btn">SELECT SONGS</label>
+    <input type="file" id="file-upload" multiple accept="audio/*">
 
-        <div class="song-details">
-            <div class="text">
-                <h2 id="title">No Songs</h2>
-                <p id="artist">Select multiple files</p>
-            </div>
-            <i class="fas fa-heart" style="color: #1db954;"></i>
-        </div>
-
-        <div class="upload-section">
-            <label for="file-upload" class="custom-file-upload">
-                <i class="fas fa-plus"></i> ADD SONGS (SELECT MULTIPLE)
-            </label>
-            <input id="file-upload" type="file" accept="audio/*" multiple />
-        </div>
-
-        <div class="seek-bar-container">
-            <input type="range" value="0" id="seek-bar">
-            <div class="time-stamps">
-                <span id="current-time">0:00</span>
-                <span id="duration-time">0:00</span>
-            </div>
-        </div>
-
-        <div class="main-controls">
-            <i class="fas fa-random" title="Shuffle"></i>
-            <i class="fas fa-step-backward" id="prev-btn"></i>
-            <i class="fas fa-play-circle" id="play-btn"></i>
-            <i class="fas fa-step-forward" id="next-btn"></i>
-            <i class="fas fa-redo" title="Repeat"></i>
-        </div>
-
-        <div class="playlist-info">
-            <h4>UP NEXT</h4>
-            <ul id="song-list"></ul>
+    <div class="seek-container">
+        <input type="range" id="seek-bar" value="0">
+        <div class="time">
+            <span id="current">0:00</span>
+            <span id="duration">0:00</span>
         </div>
     </div>
 
-    <script>
-        const audio = document.getElementById('main-audio');
-        const fileInput = document.getElementById('file-upload');
-        const playBtn = document.getElementById('play-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const prevBtn = document.getElementById('prev-btn');
-        const title = document.getElementById('title');
-        const seekBar = document.getElementById('seek-bar');
-        const songListUI = document.getElementById('song-list');
+    <div class="controls">
+        <i class="fas fa-random"></i>
+        <i class="fas fa-step-backward" id="prev"></i>
+        <i class="fas fa-play-circle" id="play-btn"></i>
+        <i class="fas fa-step-forward" id="next"></i>
+        <i class="fas fa-redo"></i>
+    </div>
 
-        let playlist = [];
-        let currentTrackIndex = 0;
+    <div id="song-list"></div>
+</div>
 
-        // 1. Multiple Files Upload
-        fileInput.addEventListener('change', function(e) {
-            const files = Array.from(this.files);
-            if (files.length > 0) {
-                playlist = files.map(file => ({
-                    name: file.name.replace(/\.[^/.]+$/, ""),
-                    url: URL.createObjectURL(file)
-                }));
-                currentTrackIndex = 0;
-                loadTrack(currentTrackIndex);
-                updatePlaylistUI();
-                playSong();
-            }
-        });
+<script>
+    const audio = document.getElementById('main-audio');
+    const playBtn = document.getElementById('play-btn');
+    const fileInput = document.getElementById('file-upload');
+    const title = document.getElementById('title');
+    const seekBar = document.getElementById('seek-bar');
+    const songListDiv = document.getElementById('song-list');
 
-        // 2. Load Track Function
-        function loadTrack(index) {
-            if (playlist[index]) {
-                audio.src = playlist[index].url;
-                title.innerText = playlist[index].name;
-                audio.load();
-                updatePlaylistUI();
-            }
+    let playlist = [];
+    let currentIndex = 0;
+
+    // 1. Files Upload Logic
+    fileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        if(files.length > 0) {
+            playlist = files.map(file => ({
+                name: file.name.replace(/\.[^/.]+$/, ""),
+                url: URL.createObjectURL(file)
+            }));
+            currentIndex = 0;
+            loadAndPlay(0);
+            renderPlaylist();
         }
+    });
 
-        function playSong() {
+    function loadAndPlay(index) {
+        if(playlist[index]) {
+            audio.src = playlist[index].url;
+            title.innerText = playlist[index].name;
             audio.play();
             playBtn.classList.replace('fa-play-circle', 'fa-pause-circle');
+            renderPlaylist();
         }
+    }
 
-        function pauseSong() {
+    // 2. Play/Pause Toggle
+    playBtn.onclick = () => {
+        if(!audio.src) return alert("Pehle songs select karein!");
+        if(audio.paused) {
+            audio.play();
+            playBtn.classList.replace('fa-play-circle', 'fa-pause-circle');
+        } else {
             audio.pause();
             playBtn.classList.replace('fa-pause-circle', 'fa-play-circle');
         }
+    };
 
-        // 3. Play/Pause Toggle
-        playBtn.addEventListener('click', () => {
-            if (playlist.length === 0) return alert("Songs upload kijiye!");
-            audio.paused ? playSong() : pauseSong();
-        });
+    // 3. Next/Prev Controls
+    document.getElementById('next').onclick = () => {
+        currentIndex = (currentIndex + 1) % playlist.length;
+        loadAndPlay(currentIndex);
+    };
 
-        // 4. Next Button
-        nextBtn.addEventListener('click', () => {
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-            loadTrack(currentTrackIndex);
-            playSong();
-        });
+    document.getElementById('prev').onclick = () => {
+        currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+        loadAndPlay(currentIndex);
+    };
 
-        // 5. Previous Button
-        prevBtn.addEventListener('click', () => {
-            currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
-            loadTrack(currentTrackIndex);
-            playSong();
-        });
+    // Auto-Next
+    audio.onended = () => document.getElementById('next').click();
 
-        // 6. Automatically play next song
-        audio.onended = () => nextBtn.click();
-
-        // 7. Update Playlist UI
-        function updatePlaylistUI() {
-            songListUI.innerHTML = "";
-            playlist.forEach((song, index) => {
-                const li = document.createElement('li');
-                li.innerText = `${index + 1}. ${song.name}`;
-                if (index === currentTrackIndex) li.classList.add('active-song');
-                songListUI.appendChild(li);
-            });
+    // 4. Progress Update
+    audio.ontimeupdate = () => {
+        if(audio.duration) {
+            seekBar.value = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('current').innerText = formatTime(audio.currentTime);
+            document.getElementById('duration').innerText = formatTime(audio.duration);
         }
+    };
 
-        // 8. Progress Bar Logic
-        audio.ontimeupdate = () => {
-            if(audio.duration) {
-                seekBar.value = (audio.currentTime / audio.duration) * 100;
-                document.getElementById('current-time').innerText = formatTime(audio.currentTime);
-                document.getElementById('duration-time').innerText = formatTime(audio.duration);
-            }
-        };
+    seekBar.oninput = () => audio.currentTime = (seekBar.value / 100) * audio.duration;
 
-        seekBar.oninput = () => {
-            audio.currentTime = (seekBar.value / 100) * audio.duration;
-        };
+    function formatTime(t) {
+        let m = Math.floor(t/60), s = Math.floor(t%60);
+        return `${m}:${s < 10 ? '0'+s : s}`;
+    }
 
-        function formatTime(time) {
-            let min = Math.floor(time / 60);
-            let sec = Math.floor(time % 60);
-            return `${min}:${sec < 10 ? '0' + sec : sec}`;
-        }
+    function renderPlaylist() {
+        songListDiv.innerHTML = playlist.map((s, i) => 
+            `<div class="song-item ${i===currentIndex?'active':''}" onclick="loadAndPlay(${i})">${i+1}. ${s.name}</div>`
+        ).join('');
+    }
 
-        // 9. Reload Protection
-        window.addEventListener('beforeunload', (e) => {
-            if (playlist.length > 0) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
-    </script>
+    // 5. RELOAD PROTECTION (Popup)
+    window.onbeforeunload = function() {
+        if (playlist.length > 0) return "Playlist loss ho jayegi, kya aap sure hain?";
+    };
+</script>
+
 </body>
 </html>
