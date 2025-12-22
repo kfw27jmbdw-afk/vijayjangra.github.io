@@ -14,7 +14,6 @@ let playlist = [
         name: "Second Song - Catbox",
         url: "https://files.catbox.moe/et6n02.mp3"
     },
-    let playlist = [
     {
         name: "Guru Randhawa - Lahore",
         url: "https://files.catbox.moe/41aleb.mp3"
@@ -27,7 +26,6 @@ let playlist = [
         name: "Gulaab - Google Drive",
         url: "https://drive.google.com/uc?export=download&id=1LkTLkmcy7Ljy-8wQN0kJy27ff5Ha2vok"
     }
-
 ];
 
 let currentIndex = 0;
