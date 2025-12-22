@@ -27,7 +27,6 @@ let playlist = [
         name: "Gulaab - Google Drive",
         url: "https://drive.google.com/uc?export=download&id=1LkTLkmcy7Ljy-8wQN0kJy27ff5Ha2vok"
     }
-];
 
 ];
 
