@@ -18,19 +18,20 @@
         .song-info h2 { font-size: 22px; margin-bottom: 5px; }
         .song-info p { color: #b3b3b3; font-size: 14px; margin-bottom: 20px; }
         .controls { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
-        #play-btn { font-size: 60px; cursor: pointer; }
+        #play-btn { font-size: 60px; cursor: pointer; color: white; }
         .controls i { font-size: 25px; cursor: pointer; color: #b3b3b3; transition: 0.2s; }
         .controls i:hover { color: white; }
         .seek-container { width: 100%; margin-top: 10px; }
         #seek-bar { width: 100%; accent-color: #1db954; cursor: pointer; }
         .time { display: flex; justify-content: space-between; font-size: 12px; color: #b3b3b3; margin-top: 8px; }
         .upload-btn {
-            background: #1db954; color: black; padding: 10px; border-radius: 20px;
+            background: #1db954; color: black; padding: 12px; border-radius: 25px;
             text-align: center; font-weight: bold; cursor: pointer; margin: 15px 0; display: block;
         }
-        #song-list { list-style: none; margin-top: 20px; font-size: 14px; }
-        .song-item { padding: 8px; border-bottom: 1px solid #222; color: #b3b3b3; cursor: pointer; }
-        .active { color: #1db954; font-weight: bold; }
+        #song-list { list-style: none; margin-top: 20px; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+        .song-item { padding: 10px; border-radius: 5px; color: #b3b3b3; cursor: pointer; transition: 0.3s; }
+        .song-item:hover { background: rgba(255,255,255,0.1); }
+        .active { color: #1db954; font-weight: bold; background: rgba(29, 185, 84, 0.1); }
         #file-upload { display: none; }
     </style>
 </head>
@@ -38,7 +39,7 @@
 
 <div class="player-container">
     <audio id="main-audio"></audio>
-    <div style="text-align: center; font-size: 12px; opacity: 0.8;">NOW PLAYING</div>
+    <div style="text-align: center; font-size: 12px; opacity: 0.8; letter-spacing: 2px;">NOW PLAYING</div>
     
     <div class="album-art">
         <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500" id="cover">
@@ -46,10 +47,10 @@
 
     <div class="song-info">
         <h2 id="title">No Music</h2>
-        <p id="artist">Upload multiple songs</p>
+        <p id="artist">Upload multiple songs to start</p>
     </div>
 
-    <label for="file-upload" class="upload-btn">SELECT SONGS</label>
+    <label for="file-upload" class="upload-btn"><i class="fas fa-plus"></i> SELECT SONGS</label>
     <input type="file" id="file-upload" multiple accept="audio/*">
 
     <div class="seek-container">
@@ -71,94 +72,7 @@
     <div id="song-list"></div>
 </div>
 
-<script>
-    const audio = document.getElementById('main-audio');
-    const playBtn = document.getElementById('play-btn');
-    const fileInput = document.getElementById('file-upload');
-    const title = document.getElementById('title');
-    const seekBar = document.getElementById('seek-bar');
-    const songListDiv = document.getElementById('song-list');
-
-    let playlist = [];
-    let currentIndex = 0;
-
-    // 1. Files Upload Logic
-    fileInput.addEventListener('change', (e) => {
-        const files = Array.from(e.target.files);
-        if(files.length > 0) {
-            playlist = files.map(file => ({
-                name: file.name.replace(/\.[^/.]+$/, ""),
-                url: URL.createObjectURL(file)
-            }));
-            currentIndex = 0;
-            loadAndPlay(0);
-            renderPlaylist();
-        }
-    });
-
-    function loadAndPlay(index) {
-        if(playlist[index]) {
-            audio.src = playlist[index].url;
-            title.innerText = playlist[index].name;
-            audio.play();
-            playBtn.classList.replace('fa-play-circle', 'fa-pause-circle');
-            renderPlaylist();
-        }
-    }
-
-    // 2. Play/Pause Toggle
-    playBtn.onclick = () => {
-        if(!audio.src) return alert("Pehle songs select karein!");
-        if(audio.paused) {
-            audio.play();
-            playBtn.classList.replace('fa-play-circle', 'fa-pause-circle');
-        } else {
-            audio.pause();
-            playBtn.classList.replace('fa-pause-circle', 'fa-play-circle');
-        }
-    };
-
-    // 3. Next/Prev Controls
-    document.getElementById('next').onclick = () => {
-        currentIndex = (currentIndex + 1) % playlist.length;
-        loadAndPlay(currentIndex);
-    };
-
-    document.getElementById('prev').onclick = () => {
-        currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-        loadAndPlay(currentIndex);
-    };
-
-    // Auto-Next
-    audio.onended = () => document.getElementById('next').click();
-
-    // 4. Progress Update
-    audio.ontimeupdate = () => {
-        if(audio.duration) {
-            seekBar.value = (audio.currentTime / audio.duration) * 100;
-            document.getElementById('current').innerText = formatTime(audio.currentTime);
-            document.getElementById('duration').innerText = formatTime(audio.duration);
-        }
-    };
-
-    seekBar.oninput = () => audio.currentTime = (seekBar.value / 100) * audio.duration;
-
-    function formatTime(t) {
-        let m = Math.floor(t/60), s = Math.floor(t%60);
-        return `${m}:${s < 10 ? '0'+s : s}`;
-    }
-
-    function renderPlaylist() {
-        songListDiv.innerHTML = playlist.map((s, i) => 
-            `<div class="song-item ${i===currentIndex?'active':''}" onclick="loadAndPlay(${i})">${i+1}. ${s.name}</div>`
-        ).join('');
-    }
-
-    // 5. RELOAD PROTECTION (Popup)
-    window.onbeforeunload = function() {
-        if (playlist.length > 0) return "Playlist loss ho jayegi, kya aap sure hain?";
-    };
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
