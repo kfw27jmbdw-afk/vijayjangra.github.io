@@ -5,27 +5,49 @@ const title = document.getElementById('title');
 const seekBar = document.getElementById('seek-bar');
 const songListDiv = document.getElementById('song-list');
 
-let playlist = [];
+// Google Drive ke gaane yahan add honge
+let playlist = [
+    {
+        name: "Guru Randhawa Song",
+        url: "https://drive.google.com/uc?export=download&id=1gwwJMMxBdcgiegloRp-Bgd-WI4kNkRrl"
+    }
+    // Agla gaana aise add karein:
+    // ,{ name: "Song Name", url: "https://drive.google.com/uc?export=download&id=DRIVE_ID" }
+];
+
 let currentIndex = 0;
 
+// Pehli baar load hone par
+window.onload = () => {
+    if (playlist.length > 0) {
+        loadSong(0);
+        renderPlaylist();
+    }
+};
+
+function loadSong(index) {
+    currentIndex = index;
+    audio.src = playlist[index].url;
+    title.innerText = playlist[index].name;
+    renderPlaylist();
+}
+
+function loadAndPlay(index) {
+    loadSong(index);
+    audio.play();
+    playBtn.classList.replace('fa-play-circle', 'fa-pause-circle');
+}
+
+// Local file upload ka support abhi bhi rakha hai
 fileInput.addEventListener('change', (e) => {
     const files = Array.from(e.target.files);
-    playlist = files.map(file => ({
+    const newFiles = files.map(file => ({
         name: file.name.replace(/\.[^/.]+$/, ""),
         url: URL.createObjectURL(file)
     }));
-    currentIndex = 0;
-    loadAndPlay(0);
+    playlist = [...playlist, ...newFiles];
     renderPlaylist();
 });
-
-function loadAndPlay(index) {
-    audio.src = playlist[index].url;
-    title.innerText = playlist[index].name;
-    audio.play();
-    playBtn.classList.replace('fa-play-circle', 'fa-pause-circle');
-    renderPlaylist();
-}
 
 playBtn.onclick = () => {
     if (audio.paused) {
@@ -69,6 +91,9 @@ function renderPlaylist() {
     playlist.forEach((s, i) => {
         const div = document.createElement('div');
         div.className = `song-item ${i === currentIndex ? 'active' : ''}`;
+        div.style.padding = "10px";
+        div.style.cursor = "pointer";
+        div.style.borderBottom = "1px solid #333";
         div.innerText = `${i + 1}. ${s.name}`;
         div.onclick = () => loadAndPlay(i);
         songListDiv.appendChild(div);
