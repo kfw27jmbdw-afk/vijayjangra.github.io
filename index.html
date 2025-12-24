@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bubu Master Weaver Pro</title>
-    
     <link rel="manifest" href="manifest.json">
-    
     <meta name="theme-color" content="#5f9ea0">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -63,6 +59,11 @@
         </div>
 
         <div id="fabricView" class="tab-content">
+             <div style="background: rgba(255,255,255,0.2); padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; align-items: center; gap: 15px;">
+                <label style="font-weight: bold; color: white;">🔍 Fabric Zoom:</label>
+                <input type="range" id="zoomSlider" min="1" max="20" value="10" step="1" oninput="applyAndRender()" style="flex: 1; cursor: pointer;">
+                <span id="zoomVal" style="color: white; font-weight: bold; width: 30px;">10x</span>
+            </div>
              <div class="fabric-wrapper">
                 <div id="vScale" class="scale-v"></div>
                 <div class="canvas-container">
