@@ -60,7 +60,7 @@ function renderDent() {
 function updateD(r, c, v) { dentingMatrix[r][c] = v === "" ? "" : parseInt(v); applyAndRender(); }
 function addDentRow() { dentingMatrix.push(["","","","","",1]); renderDent(); }
 
-// --- FAST RENDERING HELPERS ---
+// RENDERING HELPERS
 function drawYarnSegment(ctx, x, y, w, h, color, isVertical) {
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
@@ -115,6 +115,11 @@ function drawScales(epi, ppi, wS, hS) {
 function applyAndRender() {
     const reed = parseInt(document.getElementById("reedInput").value) || 40;
     const ppi = parseInt(document.getElementById("ppiInput").value) || 40;
+    
+    const zSlider = document.getElementById("zoomSlider");
+    const zoomLevel = zSlider ? parseInt(zSlider.value) : 10;
+    if(document.getElementById("zoomVal")) document.getElementById("zoomVal").textContent = zoomLevel + "x";
+
     let threadSeq = []; let maxS = 0;
     dentingMatrix.forEach(row => {
         let threads = row.slice(0, 5).filter(n => n !== "" && !isNaN(n));
@@ -141,15 +146,14 @@ function applyAndRender() {
 
     ["fabricCanvas", "weaveCanvas", "largeCanvas"].forEach(id => {
         const c = document.getElementById(id); if(!c) return;
-        drawFabric(c, warpP, weftP, threadSeq, minR, minC, maxR-minR+1, maxS, epi, ppi);
+        drawFabric(c, warpP, weftP, threadSeq, minR, minC, maxR-minR+1, maxS, epi, ppi, zoomLevel);
     });
     saveToStorage();
 }
 
-// --- OPTIMIZED DRAWING LOGIC ---
-function drawFabric(canvas, warpP, weftP, threadSeq, minR, minC, pH, pW, epi, ppi) {
+function drawFabric(canvas, warpP, weftP, threadSeq, minR, minC, pH, pW, epi, ppi, zoomLevel) {
     const ctx = canvas.getContext("2d", { alpha: false });
-    const zoom = canvas.id === "largeCanvas" ? 10 : 5;
+    const zoom = canvas.id === "largeCanvas" ? zoomLevel : 5;
     const wS = (96 * zoom) / epi; const hS = (96 * zoom) / ppi;
     const yarnW = wS * 0.7; const yarnH = hS * 0.7;
 
@@ -168,20 +172,14 @@ function drawFabric(canvas, warpP, weftP, threadSeq, minR, minC, pH, pW, epi, pp
             const x = i * wS; const y = j * hS;
 
             if (isWarpOver) {
-                // Bottom Weft
                 drawYarnSegment(ctx, x, y + (hS-yarnH)/2, wS, yarnH, weftCol, false);
-                // Contact Shadow
                 ctx.fillStyle = "rgba(0,0,0,0.4)";
                 ctx.fillRect(x + (wS-yarnW)/2 - 1, y, yarnW + 2, hS);
-                // Top Warp
                 drawYarnSegment(ctx, x + (wS-yarnW)/2, y, yarnW, hS, warpCol, true);
             } else {
-                // Bottom Warp
                 drawYarnSegment(ctx, x + (wS-yarnW)/2, y, yarnW, hS, warpCol, true);
-                // Contact Shadow
                 ctx.fillStyle = "rgba(0,0,0,0.4)";
                 ctx.fillRect(x, y + (hS-yarnH)/2 - 1, wS, yarnH + 2);
-                // Top Weft
                 drawYarnSegment(ctx, x, y + (hS-yarnH)/2, wS, yarnH, weftCol, false);
             }
         }
