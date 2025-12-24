@@ -1,18 +1,14 @@
 {
-  "name": "Music Player PWA",
-  "short_name": "Music",
+  "name": "Bubu Master Weaver Pro",
+  "short_name": "BubuWeaver",
+  "description": "Professional Textile Weaving Tool",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#9a9a66",
+  "theme_color": "#5f9ea0",
   "icons": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-512.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/3067/3067160.png",
       "sizes": "512x512",
       "type": "image/png"
     }
