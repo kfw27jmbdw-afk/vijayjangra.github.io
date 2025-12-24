@@ -1,15 +1,21 @@
-const CACHE = "music-pwa-v1";
+const cacheName = 'bubu-weaver-v1';
+const staticAssets = [
+  './',
+  './index.html',
+  './style.css',
+  './script.js',
+  './manifest.json'
+];
 
-self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c =>
-      c.addAll(["./", "./index.html", "./script.js"])
-    )
-  );
+self.addEventListener('install', async e => {
+  const cache = await caches.open(cacheName);
+  await cache.addAll(staticAssets);
 });
 
-self.addEventListener("fetch", e => {
+self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    caches.match(e.request).then(res => {
+      return res || fetch(e.request);
+    })
   );
 });
