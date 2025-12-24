@@ -60,18 +60,16 @@ function renderDent() {
 function updateD(r, c, v) { dentingMatrix[r][c] = v === "" ? "" : parseInt(v); applyAndRender(); }
 function addDentRow() { dentingMatrix.push(["","","","","",1]); renderDent(); }
 
-// --- TERE DIYE HUYE ORIGINAL FABRIC FUNCTIONS ---
+// --- FAST RENDERING HELPERS ---
 function drawYarnSegment(ctx, x, y, w, h, color, isVertical) {
-    ctx.save();
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
     let grad = isVertical ? ctx.createLinearGradient(x, 0, x + w, 0) : ctx.createLinearGradient(0, y, 0, y + h);
-    grad.addColorStop(0, "rgba(0,0,0,0.6)");
+    grad.addColorStop(0, "rgba(0,0,0,0.5)");
     grad.addColorStop(0.5, "rgba(0,0,0,0)");
-    grad.addColorStop(1, "rgba(0,0,0,0.6)");
+    grad.addColorStop(1, "rgba(0,0,0,0.5)");
     ctx.fillStyle = grad;
     ctx.fillRect(x, y, w, h);
-    ctx.restore();
 }
 
 function getPattern(colors, vals, mults) {
@@ -116,7 +114,7 @@ function drawScales(epi, ppi, wS, hS) {
 
 function applyAndRender() {
     const reed = parseInt(document.getElementById("reedInput").value) || 40;
-    const ppiInputValue = parseInt(document.getElementById("ppiInput").value) || 40;
+    const ppi = parseInt(document.getElementById("ppiInput").value) || 40;
     let threadSeq = []; let maxS = 0;
     dentingMatrix.forEach(row => {
         let threads = row.slice(0, 5).filter(n => n !== "" && !isNaN(n));
@@ -143,18 +141,19 @@ function applyAndRender() {
 
     ["fabricCanvas", "weaveCanvas", "largeCanvas"].forEach(id => {
         const c = document.getElementById(id); if(!c) return;
-        drawFabric(c, warpP, weftP, threadSeq, minR, minC, maxR-minR+1, maxS, epi, ppiInputValue);
+        drawFabric(c, warpP, weftP, threadSeq, minR, minC, maxR-minR+1, maxS, epi, ppi);
     });
     saveToStorage();
 }
 
+// --- OPTIMIZED DRAWING LOGIC ---
 function drawFabric(canvas, warpP, weftP, threadSeq, minR, minC, pH, pW, epi, ppi) {
-    const ctx = canvas.getContext("2d");
-    const zoom = canvas.id === "largeCanvas" ? 12 : 6;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    const zoom = canvas.id === "largeCanvas" ? 10 : 5;
     const wS = (96 * zoom) / epi; const hS = (96 * zoom) / ppi;
-    const yarnW = wS * 0.65; const yarnH = hS * 0.65;
+    const yarnW = wS * 0.7; const yarnH = hS * 0.7;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     if(canvas.id === "largeCanvas") drawScales(epi, ppi, wS, hS);
 
     const cols = Math.ceil(canvas.width / wS);
@@ -166,26 +165,25 @@ function drawFabric(canvas, warpP, weftP, threadSeq, minR, minC, pH, pW, epi, pp
         for (let j = 0; j < rows; j++) {
             const weftCol = weftP[j % weftP.length];
             const isWarpOver = pegPlanData[minR + (j % pH)][minC + (shaft % pW)] === 1;
+            const x = i * wS; const y = j * hS;
+
             if (isWarpOver) {
-                drawYarnSegment(ctx, i * wS, j * hS + (hS-yarnH)/2, wS, yarnH, weftCol, false);
+                // Bottom Weft
+                drawYarnSegment(ctx, x, y + (hS-yarnH)/2, wS, yarnH, weftCol, false);
+                // Contact Shadow
+                ctx.fillStyle = "rgba(0,0,0,0.4)";
+                ctx.fillRect(x + (wS-yarnW)/2 - 1, y, yarnW + 2, hS);
+                // Top Warp
+                drawYarnSegment(ctx, x + (wS-yarnW)/2, y, yarnW, hS, warpCol, true);
             } else {
-                drawYarnSegment(ctx, i * wS + (wS-yarnW)/2, j * hS, yarnW, hS, warpCol, true);
+                // Bottom Warp
+                drawYarnSegment(ctx, x + (wS-yarnW)/2, y, yarnW, hS, warpCol, true);
+                // Contact Shadow
+                ctx.fillStyle = "rgba(0,0,0,0.4)";
+                ctx.fillRect(x, y + (hS-yarnH)/2 - 1, wS, yarnH + 2);
+                // Top Weft
+                drawYarnSegment(ctx, x, y + (hS-yarnH)/2, wS, yarnH, weftCol, false);
             }
-        }
-    }
-    for (let i = 0; i < cols; i++) {
-        const warpCol = warpP[i % warpP.length];
-        const shaft = threadSeq[i % threadSeq.length];
-        for (let j = 0; j < rows; j++) {
-            const weftCol = weftP[j % weftP.length];
-            const isWarpOver = pegPlanData[minR + (j % pH)][minC + (shaft % pW)] === 1;
-            ctx.shadowBlur = 8; ctx.shadowColor = "rgba(0,0,0,1)";
-            if (isWarpOver) {
-                drawYarnSegment(ctx, i * wS + (wS-yarnW)/2, j * hS, yarnW, hS, warpCol, true);
-            } else {
-                drawYarnSegment(ctx, i * wS, j * hS + (hS-yarnH)/2, wS, yarnH, weftCol, false);
-            }
-            ctx.shadowBlur = 0;
         }
     }
 }
@@ -202,7 +200,6 @@ function initPeg() {
     }
 }
 
-// 🌐 PWA REGISTRATION (Only Additions)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
